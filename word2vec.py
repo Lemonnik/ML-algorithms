@@ -57,7 +57,7 @@ class SkipGram:
         zeros = [0] * (self.window - 1)
         ones = [1] * (self.window - 1)
         for line in tokens:
-          idx = [self.word2idx[word] for word in line if self.word2idx.get(word, 0)]
+          idx = [self.word2idx[word] for word in line if self.word2idx.get(word, -1) != -1]
           for i in range(dx, len(idx) - dx):
               # context words
               u_pos = idx[i-dx:i] + idx[i+1:i+dx+1]
@@ -137,13 +137,13 @@ class SkipGram:
 
 
     def get_word_vector(self, word):
-        v_pos = self.vocab.get(word, None)
-        return self.V[v_pos] if v_pos else None
+        v_pos = self.vocab.get(word, -1)
+        return self.V[v_pos] if v_pos != -1 else None
 
 
     def find_context(self, word):
-        v_pos = self.vocab.get(word, None)
-        if v_pos:
+        v_pos = self.vocab.get(word, -1)
+        if v_pos != -1:
             logits, probs = self.forward([v_pos])
             idxs = np.argsort(-probs)[0][:self.context]
             return list(map(lambda i: self.idx2word[i], idxs))
@@ -156,8 +156,8 @@ class SkipGram:
 
 
     def find_most_similar(self, word, n=5):
-        idx = self.word2idx.get(word, None)
-        if idx: 
+        idx = self.word2idx.get(word, -1)
+        if idx != -1: 
             v = self.V[idx]
             cos_sim = np.apply_along_axis(lambda x: self.similarity(v, x), 1, self.V)
             most_similar = np.argsort(-cos_sim)[:n]
